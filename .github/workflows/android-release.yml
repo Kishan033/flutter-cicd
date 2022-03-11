@@ -88,6 +88,7 @@ jobs:
   release-in-github:
     name: Releasing in github
     needs: [ version, tag-version, build ]
+    runs-on: macos-latest
     if: github.event_name == 'push'
     steps:
     - name: Create a Release in GitHub
