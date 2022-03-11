@@ -86,8 +86,8 @@ jobs:
         commit: ${{ github.sha }}
 
   release-in-github:
-    needs: [ version, tag-version, build ]
     name: Releasing in github
+    needs: [ version, tag-version, build ]
     if: github.event_name == 'push'
     steps:
     - name: Create a Release in GitHub
