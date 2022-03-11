@@ -8,6 +8,32 @@ on:
 
 jobs:
 
+  tag-version:
+    name: Create version number
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Fetch all history for all tags and branches
+      run: |
+        git fetch --prune --depth=10000
+    - name: Set Actions Allow Unsecure Commands
+      run: |
+        echo "ACTIONS_ALLOW_UNSECURE_COMMANDS=true" >> $GITHUB_ENV
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0.9.3
+      with:
+          versionSpec: '5.9.x'
+    - name: Use GitVersion
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v0.9.3
+    - name: Create version.txt with nuGetVersion
+      run: echo ${{ steps.gitversion.outputs.nuGetVersion  }} > version.txt
+    - name: Upload version.txt
+      uses: actions/upload-artifact@v2
+      with:
+        name: gitversion
+        path: version.txt
+
   version:
     name: Get version
     runs-on: macos-latest
