@@ -13,12 +13,12 @@ jobs:
     runs-on: macos-latest
     steps:
     - name: Get Flutter version from pubspec
-        run: |
-          set -e
+      run: |
+        set -e
 
-          brew install yq
-          _appVersion=$( yq read pubspec.yaml version )
-          echo "APP_VERSION=${_appVersion}" >> $GITHUB_ENV
+        brew install yq
+        _appVersion=$( yq read pubspec.yaml version )
+        echo "APP_VERSION=${_appVersion}" >> $GITHUB_ENV
 
   build:
     name: Build APK and Create release
