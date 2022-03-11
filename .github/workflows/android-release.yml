@@ -47,7 +47,7 @@ jobs:
 
   build:
     name: Build APK and Create release
-    needs: [ version ]
+    needs: [ version, tag-version ]
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v1
@@ -83,4 +83,17 @@ jobs:
         artifacts: "build/app/outputs/apk/release/*.apk,build/app/outputs/bundle/release/app-release.aab"
         token: ${{ secrets.GH_TOKEN }}
         tag: ${{ steps.pr.outputs.pull_request_number }}
+        commit: ${{ github.sha }}
+
+  release-in-github:
+    needs: [ version, tag-version, build ]
+    name: Releasing in github
+    if: github.event_name == 'push'
+    steps:
+    - name: Create a Release in GitHub
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "build/app/outputs/apk/release/*.apk,build/app/outputs/bundle/release/app-release.aab"
+        token: ${{ secrets.GH_TOKEN }}
+        tag: ${{ steps.version.outputs.content }}
         commit: ${{ github.sha }}
