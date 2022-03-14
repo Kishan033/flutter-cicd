@@ -70,7 +70,7 @@ jobs:
     # - run: flutter build appbundle
     - name: Create whatsnew folder
       run: |
-        mkdir -p distribution/whatsnew && cd distribution/whatsnew && touch whatsnew-en-US && echo ${{ github.event.release.body }} > whatsnew-en-US && cd ..
+        mkdir -p distribution/whatsnew && cd distribution/whatsnew && touch whatsnew-en-US && echo "${{ github.event.release.body }}" > whatsnew-en-US && cd ..
     - name: Create a Release in GitHub
       if: github.event_name == 'push'
       uses: ncipollo/release-action@v1
