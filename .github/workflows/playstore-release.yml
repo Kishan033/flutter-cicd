@@ -1,0 +1,108 @@
+name: Demo App Playstore Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+
+  tag-version:
+    name: Create version number
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Fetch all history for all tags and branches
+      run: |
+        git fetch --prune --depth=10000
+    - name: Set Actions Allow Unsecure Commands
+      run: |
+        echo "ACTIONS_ALLOW_UNSECURE_COMMANDS=true" >> $GITHUB_ENV
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0.9.3
+      with:
+          versionSpec: '5.9.x'
+    - name: Use GitVersion
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v0.9.3
+    - name: Create version.txt with nuGetVersion
+      run: echo ${{ steps.gitversion.outputs.nuGetVersion  }} > version.txt
+    - name: Upload version.txt
+      uses: actions/upload-artifact@v2
+      with:
+        name: gitversion
+        path: version.txt
+
+  version:
+    name: Get version
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Get flutter version
+      id: get_flutter_version
+      uses: its404/get-flutter-version@v1.0.0
+    - name: Output flutter version
+      run: echo 'version_number:' ${{ steps.get_flutter_version.outputs.version_number }} ' build_number:' ${{ steps.get_flutter_version.outputs.build_number }}
+
+  build:
+    name: Build APK and Create release
+    needs: [ version, tag-version ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-java@v1
+      with:
+        java-version: '12.x'
+    - uses: subosito/flutter-action@v1
+      with:
+        flutter-version: '2.10.1'
+    - name: Get version.txt
+      uses: actions/download-artifact@v2
+      with:
+        name: gitversion
+    - name: Read version
+      id: version
+      uses: juliangruber/read-file-action@v1
+      with:
+        path: version.txt
+    # - run: flutter pub get
+    # - run: flutter test
+    # - run: flutter build apk --release --split-per-abi
+    # - run: flutter build appbundle
+    - name: Create whatsnew folder
+      run: |
+        mkdir -p distribution/whatsnew && cd distribution/whatsnew && touch whatsnew-en-US && echo ${{ github.event.release.body }} > whatsnew-en-US && cd ..
+    - name: Create a Release in GitHub
+      if: github.event_name == 'push'
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "distribution/whatsnew"
+        # artifacts: "build/app/outputs/apk/release/*.apk,build/app/outputs/bundle/release/app-release.aab,distribution/whatsnew"
+        token: ${{ secrets.GH_TOKEN }}
+        tag: ${{ steps.version.outputs.content }}
+        commit: ${{ github.sha }}
+    # - name: Upload app bundle
+    #   uses: actions/upload-artifact@v2
+    #   with:
+    #     name: appbundle
+    #     path: build/app/outputs/bundle/release/app-release.aab
+
+  # release:
+  #   name: Release app to internal track
+  #   needs: [ build ]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v1 
+  #   - name: Get appbundle from artifacts
+  #     uses: actions/download-artifact@v2
+  #     with:
+  #       name: appbundle
+  #   - name: Release app to internal track
+  #     uses: r0adkll/upload-google-play@v1
+  #     with:
+  #       serviceAccountJsonPlainText: ${{ secrets.PLAYSTORE_ACCOUNT_KEY }}
+  #       packageName: com.fluttercicddemo
+  #       releaseFile: app-release.aab
+  #       track: internal
+  #       whatsNewDirectory: distribution/whatsnew
+
+    
