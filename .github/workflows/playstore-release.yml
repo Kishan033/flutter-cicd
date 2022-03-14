@@ -72,7 +72,7 @@ jobs:
       run: |
         mkdir -p distribution/whatsnew && cd distribution/whatsnew && touch whatsnew-en-US && echo "${{ github.event.release.body }}" > whatsnew-en-US && cd ..
     - name: Create a Release in GitHub
-      if: github.event_name == 'push'
+      # if: github.event_name == 'push'
       uses: ncipollo/release-action@v1
       with:
         artifacts: "distribution/whatsnew/whatsnew-en-US"
